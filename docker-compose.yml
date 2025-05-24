@@ -1,0 +1,90 @@
+version: '3.8'
+
+services:
+  billy-bot:
+    build: .
+    container_name: billy-agente-x
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+      - MONGODB_URI=mongodb://mongodb:27017/billy-agente-x
+      - REDIS_URL=redis://redis:6379
+    volumes:
+      - ./sessions:/app/sessions
+      - ./logs:/app/logs
+      - ./.env:/app/.env:ro
+    depends_on:
+      - mongodb
+      - redis
+    networks:
+      - billy-network
+    ports:
+      - "3000:3000"
+
+  mongodb:
+    image: mongo:7
+    container_name: billy-mongodb
+    restart: unless-stopped
+    environment:
+      - MONGO_INITDB_DATABASE=billy-agente-x
+    volumes:
+      - mongodb_data:/data/db
+      - ./mongo-init:/docker-entrypoint-initdb.d:ro
+    networks:
+      - billy-network
+    ports:
+      - "27017:27017"
+
+  redis:
+    image: redis:7-alpine
+    container_name: billy-redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    networks:
+      - billy-network
+    ports:
+      - "6379:6379"
+
+  # Optional: MongoDB Admin Interface
+  mongo-express:
+    image: mongo-express:latest
+    container_name: billy-mongo-express
+    restart: unless-stopped
+    environment:
+      - ME_CONFIG_MONGODB_SERVER=mongodb
+      - ME_CONFIG_MONGODB_PORT=27017
+      - ME_CONFIG_MONGODB_ENABLE_ADMIN=true
+      - ME_CONFIG_BASICAUTH_USERNAME=admin
+      - ME_CONFIG_BASICAUTH_PASSWORD=admin123
+    depends_on:
+      - mongodb
+    networks:
+      - billy-network
+    ports:
+      - "8081:8081"
+
+  # Optional: Redis Admin Interface
+  redis-commander:
+    image: rediscommander/redis-commander:latest
+    container_name: billy-redis-commander
+    restart: unless-stopped
+    environment:
+      - REDIS_HOSTS=local:redis:6379
+    depends_on:
+      - redis
+    networks:
+      - billy-network
+    ports:
+      - "8082:8081"
+
+volumes:
+  mongodb_data:
+    driver: local
+  redis_data:
+    driver: local
+
+networks:
+  billy-network:
+    driver: bridge
