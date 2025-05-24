@@ -8,8 +8,11 @@
     "start": "node index.js",
     "dev": "nodemon index.js",
     "test": "jest",
+    "setup": "node scripts/setup.js",
     "docker:build": "docker build -t billy-agente-x .",
-    "docker:run": "docker-compose up -d"
+    "docker:run": "docker-compose up -d",
+    "docker:stop": "docker-compose down",
+    "docker:logs": "docker-compose logs -f billy-bot"
   },
   "keywords": [
     "whatsapp-bot",
